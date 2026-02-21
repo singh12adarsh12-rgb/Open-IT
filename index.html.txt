@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HBD Love</title>
+<style>
+/* ------------------------
+   CSS from default.css
+   Minimal example for demo
+---------------------------*/
+body { margin: 0; padding: 0; background: #fff0f5; font-family: sans-serif; }
+#main { text-align: center; }
+#wrap { position: relative; width: 1100px; margin: auto; }
+#canvas { display: block; margin: 0 auto; }
+#clock-box { margin-top: 20px; font-size: 22px; color: #c00; }
+#code { display: none; font-size: 28px; color: #900; line-height: 1.5; }
+.say { display: block; margin: 5px 0; }
+#canvas.hand { cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="main">
+    <div id="wrap">
+        <div id="text">
+            <div id="code">
+                <span class="say">My beautiful wife 💞</span>
+                <span class="say">Happy Birthday 🎈</span>
+                <span class="say">May Allah bless you 🍀</span>
+                <span class="say">And give you many happiness 💕</span>
+                <span class="say">I love you ❤️</span>
+                <span class="say">And I will always love you 🥺 ❤️</span>
+                <span class="say">Hope you have a great day today ❤️😘</span>
+            </div>
+        </div>
+        <div id="clock-box"><span id="ageTimer">Calculating age...</span></div>
+        <canvas id="canvas" width="1100" height="680"></canvas>
+    </div>
+</div>
+
+<!-- Audio: external file -->
+<audio id="myAudio" src="aud.mp3"></audio>
+
+<script>
+// --------------------
+// Minimal JSCE and Tree setup
+// --------------------
+// For demo, we use a very simplified tree animation
+
+class Seed {
+    constructor(ctx, x, y) {
+        this.ctx = ctx;
+        this.x = x;
+        this.y = y;
+        this.size = 10;
+    }
+    draw() {
+        let c = this.ctx;
+        c.fillStyle = "rgb(190,26,37)";
+        c.beginPath();
+        c.arc(this.x, this.y, this.size, 0, Math.PI*2);
+        c.fill();
+    }
+    canScale() { return this.size > 2; }
+    scale(f) { this.size *= f; this.draw(); }
+    canMove() { return this.y > 400; }
+    move(dx, dy) { this.y -= dy; this.draw(); }
+    hover(mx, my) {
+        return Math.abs(mx-this.x)<this.size && Math.abs(my-this.y)<this.size;
+    }
+}
+
+window.onload = function() {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const seed = new Seed(ctx, canvas.width/2, canvas.height-50);
+    seed.draw();
+
+    canvas.addEventListener("click", () => {
+        // Play audio
+        const audio = document.getElementById("myAudio");
+        audio.play().catch(()=>console.log("Audio blocked until user interaction"));
+
+        // Animate seed
+        let interval = setInterval(() => {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            seed.scale(0.95);
+            seed.move(0,1);
+            if(!seed.canScale() && !seed.canMove()){
+                clearInterval(interval);
+                // Show text typewriter effect
+                let code = document.getElementById("code");
+                code.style.display = "block";
+                let spans = code.querySelectorAll(".say");
+                spans.forEach((s, i) => {
+                    s.style.opacity = 0;
+                    setTimeout(()=>{ s.style.opacity = 1; }, i*600);
+                });
+            }
+        }, 50);
+    });
+
+    canvas.addEventListener("mousemove", e=>{
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        if(seed.hover(mx,my)) canvas.classList.add("hand");
+        else canvas.classList.remove("hand");
+    });
+};
+
+// --------------------
+// Age Counter
+// --------------------
+function updateAge(){
+    const birthDate = new Date("2009-02-22T00:00:00");
+    const now = new Date();
+    let diff = Math.floor((now-birthDate)/1000);
+
+    let years = Math.floor(diff/(365.25*24*3600));
+    diff -= years*365.25*24*3600;
+    let months = Math.floor(diff/(30.44*24*3600));
+    diff -= months*30.44*24*3600;
+    let days = Math.floor(diff/(24*3600));
+    diff -= days*24*3600;
+    let hours = Math.floor(diff/3600);
+    diff -= hours*3600;
+    let minutes = Math.floor(diff/60);
+    let seconds = diff%60;
+
+    document.getElementById("ageTimer").innerHTML =
+        years+" years "+months+" months "+days+" days "+
+        hours+" hours "+minutes+" minutes "+seconds+" seconds 💖";
+}
+setInterval(updateAge,1000);
+updateAge();
+</script>
+</body>
+</html>
